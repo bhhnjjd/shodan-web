@@ -33,6 +33,24 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Optional basic auth
+if (process.env.APP_PASSWORD) {
+  app.use((req, res, next) => {
+    const auth = req.headers['authorization'] || '';
+    if (!auth.startsWith('Basic ')) {
+      res.set('WWW-Authenticate', 'Basic realm="shodan-web"');
+      return res.status(401).send('Authentication required');
+    }
+    const [, hash] = auth.split(' ');
+    const [user, pass] = Buffer.from(hash, 'base64').toString().split(':');
+    const expectedUser = process.env.APP_USERNAME || 'user';
+    if (pass !== process.env.APP_PASSWORD || user !== expectedUser) {
+      return res.status(403).send('Forbidden');
+    }
+    next();
+  });
+}
+
 // Cache middleware
 app.use((req, res, next) => {
   req.cache = cache;

@@ -18,7 +18,8 @@
 1. 在 [developer.shodan.io](https://developer.shodan.io) 获取 Shodan API Key。
 2. 将 `.env.example` 复制为 `.env`，填写 `SHODAN_API_KEYS`、`APP_PASSWORD` 等配置，可通过 `CORS_ORIGIN` 指定前端地址。
 3. 安装依赖：`npm run install-all`。
-4. 启动开发环境：`npm run dev`。
+4. 启动开发环境：`npm run dev`，在浏览器访问 `http://localhost:5173` 查看前端界面。
+5. 构建生产版本：`npm run build`，启动后端 `npm start`，即可在 `http://localhost:3001` 访问完整界面。
 
 ## Docker 部署
 
@@ -26,6 +27,7 @@
 docker build -t shodan-web .
 docker run -d --env-file .env -p 3001:3001 shodan-web
 ```
+部署完成后，访问 `http://localhost:3001` 即可使用 Web 界面。
 如需跨域访问，可在 `.env` 中设置 `CORS_ORIGIN`。
 
 ## 主要 API

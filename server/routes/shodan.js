@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const shodanService = require('../services/shodanService');
-const { asyncHandler, validateIP, validateDomain } = require('../utils/helpers');
+const { asyncHandler, validateIP, validateDomain, sanitizeQuery } = require('../utils/helpers');
 
 // Get host information
 router.get('/host/:ip', validateIP, asyncHandler(async (req, res) => {
@@ -24,13 +24,14 @@ router.get('/host/:ip', validateIP, asyncHandler(async (req, res) => {
 
 // Search hosts
 router.get('/search', asyncHandler(async (req, res) => {
-  const { q: query, page = 1, facets, minify = false } = req.query;
+  const { q, page = 1, facets, minify = false } = req.query;
+  const query = sanitizeQuery(q);
   
   if (!query || query.trim().length === 0) {
     return res.status(400).json({ error: 'Query parameter is required' });
   }
 
-  const cacheKey = `search_${query}_${page}_${facets || ''}_${minify}`;
+  const cacheKey = `search_${q}_${page}_${facets || ''}_${minify}`;
   let searchData = req.cache.get(cacheKey);
   
   if (searchData) {
@@ -51,13 +52,14 @@ router.get('/search', asyncHandler(async (req, res) => {
 
 // Get search count
 router.get('/count', asyncHandler(async (req, res) => {
-  const { q: query, facets } = req.query;
+  const { q, facets } = req.query;
+  const query = sanitizeQuery(q);
   
   if (!query || query.trim().length === 0) {
     return res.status(400).json({ error: 'Query parameter is required' });
   }
 
-  const cacheKey = `count_${query}_${facets || ''}`;
+  const cacheKey = `count_${q}_${facets || ''}`;
   let countData = req.cache.get(cacheKey);
   
   if (countData) {
@@ -103,13 +105,14 @@ router.get('/api-info', asyncHandler(async (req, res) => {
 
 // Search exploits
 router.get('/exploits', asyncHandler(async (req, res) => {
-  const { q: query, page = 1, facets } = req.query;
+  const { q, page = 1, facets } = req.query;
+  const query = sanitizeQuery(q);
   
   if (!query || query.trim().length === 0) {
     return res.status(400).json({ error: 'Query parameter is required' });
   }
 
-  const cacheKey = `exploits_${query}_${page}_${facets || ''}`;
+  const cacheKey = `exploits_${q}_${page}_${facets || ''}`;
   let exploitData = req.cache.get(cacheKey);
   
   if (exploitData) {

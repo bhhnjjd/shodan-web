@@ -3,10 +3,14 @@ FROM node:18-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
+
 COPY client/package*.json ./client/
-RUN cd client && npm install && npm run build
+RUN cd client && npm install
+
 COPY server ./server
-COPY client/dist ./client/dist
+COPY client ./client
+RUN cd client && npm run build
+
 
 # Production image
 FROM node:18-alpine

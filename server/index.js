@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -76,6 +77,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// 404 for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
+// Serve client in production
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientDist));
+
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'Endpoint not found' });
+    }
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Error:', err);
@@ -85,10 +104,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
-});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

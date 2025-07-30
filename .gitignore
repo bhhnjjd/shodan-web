@@ -1,0 +1,9 @@
+node_modules/
+client/node_modules/
+client/dist/
+.DS_Store
+.env
+*.log
+npm-debug.log*
+package-lock.json
+client/package-lock.json

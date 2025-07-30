@@ -3,18 +3,29 @@ const validator = require('validator');
 
 class ShodanService {
   constructor() {
-    this.apiKey = process.env.SHODAN_API_KEY;
-    this.baseURL = 'https://api.shodan.io';
-    
-    if (!this.apiKey) {
-      throw new Error('SHODAN_API_KEY environment variable is required');
+    const keys = process.env.SHODAN_API_KEYS || process.env.SHODAN_API_KEY;
+    if (!keys) {
+      throw new Error('SHODAN_API_KEYS or SHODAN_API_KEY environment variable is required');
     }
+    this.apiKeys = keys.split(',').map(k => k.trim()).filter(Boolean);
+    if (this.apiKeys.length === 0) {
+      throw new Error('No valid Shodan API keys provided');
+    }
+    this.currentIndex = 0;
+    this.baseURL = 'https://api.shodan.io';
+  }
+
+  getApiKey() {
+    const key = this.apiKeys[this.currentIndex];
+    this.currentIndex = (this.currentIndex + 1) % this.apiKeys.length;
+    return key;
   }
 
   async makeRequest(endpoint, params = {}) {
+    const key = this.getApiKey();
     try {
       const response = await axios.get(`${this.baseURL}${endpoint}`, {
-        params: { key: this.apiKey, ...params },
+        params: { key, ...params },
         timeout: 30000
       });
       return response.data;
@@ -87,9 +98,10 @@ class ShodanService {
     const params = { name, ip };
     if (expires) params.expires = expires;
     
+    const key = this.getApiKey();
     try {
       const response = await axios.post(`${this.baseURL}/shodan/alert`, params, {
-        params: { key: this.apiKey },
+        params: { key },
         timeout: 30000
       });
       return response.data;
@@ -104,9 +116,10 @@ class ShodanService {
   }
 
   async deleteAlert(id) {
+    const key = this.getApiKey();
     try {
       const response = await axios.delete(`${this.baseURL}/shodan/alert/${id}`, {
-        params: { key: this.apiKey },
+        params: { key },
         timeout: 30000
       });
       return response.data;
@@ -119,9 +132,10 @@ class ShodanService {
   async scanInternet(port, protocol = 'tcp') {
     const params = { port, protocol };
     
+    const key = this.getApiKey();
     try {
       const response = await axios.post(`${this.baseURL}/shodan/scan/internet`, params, {
-        params: { key: this.apiKey },
+        params: { key },
         timeout: 30000
       });
       return response.data;
